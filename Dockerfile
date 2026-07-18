@@ -21,8 +21,13 @@ WORKDIR /app
 
 COPY requirements.txt requirements-docker.txt ./
 
+# PaddleOCR may pull a GUI-enabled OpenCV package as a transitive dependency.
+# Keep only the headless build because this service never opens a desktop window.
 RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install -r requirements-docker.txt
+    pip install -r requirements-docker.txt \
+    && pip uninstall --yes opencv-python opencv-contrib-python \
+    && pip install --no-cache-dir --no-deps --force-reinstall "opencv-python-headless>=4.10,<5" \
+    && python -c "import cv2; print('OpenCV loaded:', cv2.__version__)"
 
 RUN useradd --create-home --uid 10001 --shell /usr/sbin/nologin appuser \
     && mkdir -p /tmp/.cache \

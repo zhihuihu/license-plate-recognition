@@ -64,3 +64,14 @@ docker compose up -d
 ```
 
 Compose 默认启用只读根文件系统、丢弃 Linux capabilities、禁止提权，并将临时写入放到 `/tmp`。如果宿主机安全策略不允许 `read_only` 或 `tmpfs`，需要保留这些约束并针对宿主机调整，而不是直接依赖容器写入模型目录。
+
+## 常见启动错误
+
+如果日志出现 `ImportError: libGL.so.1: cannot open shared object file`，说明使用的仍是旧镜像或旧缓存层。当前 Dockerfile 会移除 GUI 版 OpenCV，只保留 `opencv-python-headless`，并在构建阶段执行 `import cv2` 自检。
+
+推送新代码后，在有外网的机器重新拉取镜像，再重新导出给无外网环境：
+
+```bash
+docker pull ghcr.io/zhihuihu/license-plate-recognition:latest
+docker save ghcr.io/zhihuihu/license-plate-recognition:latest -o license-plate-recognition.tar
+```
