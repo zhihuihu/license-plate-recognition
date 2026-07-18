@@ -26,7 +26,7 @@ docker compose up -d
 ### 单容器
 
 ```bash
-docker run --env-file deploy/.env.docker -p 8000:8000 ghcr.io/OWNER/REPOSITORY:latest
+docker run --env-file deploy/.env.docker -p 8000:8000 ghcr.io/zhihuihu/license-plate-recognition:latest
 ```
 
 ## 服务变量
@@ -54,7 +54,7 @@ docker run --env-file deploy/.env.docker -p 8000:8000 ghcr.io/OWNER/REPOSITORY:l
 
 | 变量 | 默认值 | 说明 |
 | --- | --- | --- |
-| `LPR_IMAGE` | 无 | Compose 使用的镜像地址，例如 `ghcr.io/OWNER/REPOSITORY:latest`。 |
+| `LPR_IMAGE` | 无 | Compose 使用的镜像地址，默认项目镜像为 `ghcr.io/zhihuihu/license-plate-recognition:latest`。 |
 | `LPR_PORT` | `8000` | 宿主机端口，容器内部端口固定为 `8000`。 |
 
 Docker 镜像已经内置模型，运行时不需要挂载 `models/`。Compose 会固定以下容器内部路径和缓存目录，不建议修改：

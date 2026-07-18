@@ -6,19 +6,19 @@
 
 ## GitHub 构建
 
-将代码和 Git LFS 对象推送到 GitHub 的 `main` 分支后，`.github/workflows/docker-image.yml` 会自动：
+将代码和 Git LFS 对象推送到 GitHub 的 `master` 或 `main` 分支后，`.github/workflows/docker-image1.yml` 会自动：
 
 1. 拉取真实模型文件，而不是 LFS pointer 文件。
 2. 使用 Linux x86_64、Python 3.13 构建镜像。
 3. 执行 Dockerfile 中的模型完整性检查。
-4. 将镜像推送到 `ghcr.io/<owner>/<repository>`，并生成 `latest`、分支、tag、commit SHA 标签。
+4. 将镜像推送到 `ghcr.io/zhihuihu/license-plate-recognition`，并生成 `latest`、分支、tag、commit SHA 标签。
 
 工作流使用 `GITHUB_TOKEN` 登录 GHCR，并声明 `packages: write` 权限。GitHub 官方文档说明，工作流发布仓库关联的 Container Registry 包可以使用该 Token。
 
 ## 在有外网的机器准备镜像
 
 ```bash
-IMAGE=ghcr.io/OWNER/REPOSITORY:latest
+IMAGE=ghcr.io/zhihuihu/license-plate-recognition:latest
 echo "$GHCR_TOKEN" | docker login ghcr.io -u GITHUB_USERNAME --password-stdin
 docker pull "$IMAGE"
 docker save "$IMAGE" -o license-plate-recognition.tar
@@ -40,7 +40,7 @@ Compose 已设置 `pull_policy: never`，离线主机只会使用本地已加载
 
 ```powershell
 Copy-Item .env.docker.example .env
-# 编辑 .env，填写真实的 LPR_IMAGE 和 API_KEYS
+# 编辑 .env，填写 API_KEYS
 docker compose up -d
 docker compose ps
 docker compose logs -f lpr

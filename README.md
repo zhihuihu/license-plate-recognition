@@ -23,7 +23,7 @@
 GitHub Actions 会把镜像发布到：
 
 ```text
-ghcr.io/<GitHub 用户或组织>/<仓库名>:latest
+ghcr.io/zhihuihu/license-plate-recognition:latest
 ```
 
 镜像已经包含运行时、OCR 依赖和模型文件，部署机运行时不需要访问外网，也不需要挂载 `models/`。当前镜像目标平台为 `linux/amd64`。
@@ -33,7 +33,7 @@ ghcr.io/<GitHub 用户或组织>/<仓库名>:latest
 有外网的 Docker 主机：
 
 ```bash
-export IMAGE=ghcr.io/OWNER/REPOSITORY:latest
+export IMAGE=ghcr.io/zhihuihu/license-plate-recognition:latest
 echo "$GHCR_TOKEN" | docker login ghcr.io -u GITHUB_USERNAME --password-stdin
 docker pull "$IMAGE"
 ```
@@ -47,7 +47,7 @@ docker pull "$IMAGE"
 ```powershell
 Set-Location deploy
 Copy-Item .env.docker.example .env
-# 编辑 .env，至少替换 LPR_IMAGE 和 API_KEYS
+# 编辑 .env，至少替换 API_KEYS
 docker compose up -d
 docker compose ps
 ```
@@ -57,7 +57,7 @@ Linux/macOS 可以执行：
 ```bash
 cd deploy
 cp .env.docker.example .env
-# 编辑 .env，至少替换 LPR_IMAGE 和 API_KEYS
+# 编辑 .env，至少替换 API_KEYS
 docker compose up -d
 ```
 
