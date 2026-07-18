@@ -2,12 +2,15 @@ name: Build and publish Docker image
 
 on:
   push:
-    branches:
-      - master
-      - main
     tags:
       - "v*.*.*"
   workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "手动构建使用的镜像标签"
+        required: false
+        default: "manual"
+        type: string
 
 permissions:
   contents: read
@@ -57,7 +60,7 @@ jobs:
           images: ${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
-            type=ref,event=branch
+            type=raw,value=${{ inputs.image_tag }},enable=${{ github.event_name == 'workflow_dispatch' && inputs.image_tag != '' }}
             type=ref,event=tag
             type=sha,prefix=sha-
 

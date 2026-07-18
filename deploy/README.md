@@ -6,7 +6,7 @@
 
 ## GitHub 构建
 
-将代码和 Git LFS 对象推送到 GitHub 的 `master` 或 `main` 分支后，`.github/workflows/docker-image1.yml` 会自动：
+`.github/workflows/docker-image1.yml` 负责构建并发布镜像。将代码和 Git LFS 对象推送到 GitHub 后，工作流会：
 
 1. 拉取真实模型文件，而不是 LFS pointer 文件。
 2. 使用 Linux x86_64、Python 3.13 构建镜像。
@@ -14,6 +14,12 @@
 4. 将镜像推送到 `ghcr.io/zhihuihu/license-plate-recognition`，并生成 `latest`、分支、tag、commit SHA 标签。
 
 工作流使用 `GITHUB_TOKEN` 登录 GHCR，并声明 `packages: write` 权限。GitHub 官方文档说明，工作流发布仓库关联的 Container Registry 包可以使用该 Token。
+
+当前工作流只会在推送版本 Tag 或手动执行时运行：
+
+- 推送 `v1.2.3`：生成 `:v1.2.3` 和 `:sha-提交短哈希` 镜像。
+- 手动执行：默认生成 `:manual` 和 `:sha-提交短哈希`，也可以在 `image_tag` 输入框中填写自定义标签。
+- 从默认分支手动执行时，还会生成 `:latest`；普通分支推送不会触发构建。
 
 ## 在有外网的机器准备镜像
 
