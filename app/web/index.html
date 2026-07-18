@@ -1,0 +1,1183 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0d1114">
+  <title>车牌识别终端</title>
+  <style>
+    :root {
+      --ink: #0d1114;
+      --ink-soft: #151c20;
+      --panel: rgba(23, 31, 35, .88);
+      --panel-bright: #1c262a;
+      --line: rgba(193, 216, 211, .14);
+      --line-strong: rgba(193, 216, 211, .27);
+      --paper: #e7eee9;
+      --muted: #8c9d9b;
+      --acid: #d6f36a;
+      --acid-deep: #a7c443;
+      --cyan: #8ee4dc;
+      --danger: #ff8e79;
+      --shadow: 0 24px 70px rgba(0, 0, 0, .34);
+      --display: "Avenir Next", "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --mono: "SFMono-Regular", "Cascadia Code", "Roboto Mono", Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { min-width: 320px; background: var(--ink); }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--paper);
+      font-family: var(--display);
+      background:
+        radial-gradient(circle at 78% 10%, rgba(142, 228, 220, .10), transparent 25rem),
+        radial-gradient(circle at 8% 74%, rgba(214, 243, 106, .07), transparent 24rem),
+        var(--ink);
+      overflow-x: hidden;
+    }
+
+    body::before {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      pointer-events: none;
+      content: "";
+      opacity: .34;
+      background-image:
+        linear-gradient(rgba(193, 216, 211, .035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(193, 216, 211, .035) 1px, transparent 1px);
+      background-size: 42px 42px;
+      mask-image: linear-gradient(to bottom, black, transparent 92%);
+    }
+
+    body::after {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      pointer-events: none;
+      content: "";
+      opacity: .035;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.7'/%3E%3C/svg%3E");
+    }
+
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+
+    .app-shell {
+      width: min(1180px, calc(100% - 40px));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 90px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--paper);
+      text-decoration: none;
+      letter-spacing: .08em;
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .brand-mark {
+      display: grid;
+      width: 34px;
+      height: 34px;
+      place-items: center;
+      color: var(--ink);
+      background: var(--acid);
+      clip-path: polygon(0 0, 100% 0, 100% 72%, 72% 100%, 0 100%);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+    }
+
+    .top-link {
+      color: var(--muted);
+      font-size: 12px;
+      text-decoration: none;
+      transition: color .2s ease;
+    }
+
+    .top-link:hover { color: var(--paper); }
+
+    .system-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 11px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--acid);
+      box-shadow: 0 0 0 4px rgba(214, 243, 106, .12), 0 0 16px var(--acid);
+    }
+
+    .system-status.is-offline .status-dot {
+      background: var(--danger);
+      box-shadow: 0 0 0 4px rgba(255, 142, 121, .12);
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 270px;
+      gap: 50px;
+      align-items: end;
+      padding: 82px 0 55px;
+    }
+
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 18px;
+      color: var(--acid);
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      width: 27px;
+      height: 1px;
+      content: "";
+      background: var(--acid);
+      box-shadow: 10px 0 0 rgba(214, 243, 106, .35);
+    }
+
+    h1, h2, p { margin-top: 0; }
+
+    h1 {
+      max-width: 700px;
+      margin-bottom: 20px;
+      color: var(--paper);
+      font-size: clamp(42px, 7vw, 82px);
+      font-weight: 650;
+      letter-spacing: -.075em;
+      line-height: .98;
+    }
+
+    h1 em {
+      color: var(--acid);
+      font-style: normal;
+    }
+
+    .hero-copy {
+      max-width: 570px;
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.8;
+    }
+
+    .hero-orbit {
+      position: relative;
+      display: grid;
+      min-height: 180px;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 50% 50% 12px 50%;
+      transform: rotate(-8deg);
+      background: rgba(23, 31, 35, .46);
+      overflow: hidden;
+    }
+
+    .hero-orbit::before,
+    .hero-orbit::after {
+      position: absolute;
+      width: 210px;
+      height: 210px;
+      content: "";
+      border: 1px solid rgba(142, 228, 220, .2);
+      border-radius: 50%;
+    }
+
+    .hero-orbit::after {
+      width: 122px;
+      height: 122px;
+      border-color: rgba(214, 243, 106, .28);
+    }
+
+    .orbit-core {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      width: 54px;
+      height: 54px;
+      place-items: center;
+      border: 1px solid rgba(214, 243, 106, .65);
+      border-radius: 50%;
+      color: var(--acid);
+      font-family: var(--mono);
+      font-size: 11px;
+      background: rgba(214, 243, 106, .08);
+      box-shadow: 0 0 45px rgba(214, 243, 106, .16);
+    }
+
+    .orbit-label {
+      position: absolute;
+      right: 21px;
+      bottom: 22px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: .12em;
+      transform: rotate(8deg);
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(340px, .9fr);
+      gap: 18px;
+      padding-top: 42px;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      background: linear-gradient(145deg, rgba(28, 38, 42, .92), rgba(17, 24, 27, .92));
+      box-shadow: var(--shadow);
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 24px 25px 19px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .panel-title {
+      margin: 0 0 7px;
+      color: var(--paper);
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -.02em;
+    }
+
+    .panel-subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: .03em;
+    }
+
+    .panel-index {
+      color: var(--acid);
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: .14em;
+    }
+
+    .upload-body { padding: 25px; }
+
+    .dropzone {
+      position: relative;
+      min-height: 312px;
+      display: grid;
+      place-items: center;
+      border: 1px dashed var(--line-strong);
+      background:
+        linear-gradient(135deg, rgba(142, 228, 220, .035), transparent 55%),
+        rgba(7, 11, 13, .24);
+      transition: border-color .2s ease, background .2s ease, transform .2s ease;
+      overflow: hidden;
+    }
+
+    .dropzone:hover,
+    .dropzone.is-dragging {
+      border-color: var(--acid);
+      background-color: rgba(214, 243, 106, .06);
+    }
+
+    .dropzone.is-dragging { transform: translateY(-2px); }
+
+    .dropzone::before,
+    .dropzone::after {
+      position: absolute;
+      width: 17px;
+      height: 17px;
+      content: "";
+      border-color: var(--acid);
+      border-style: solid;
+      opacity: .7;
+    }
+
+    .dropzone::before {
+      top: 13px;
+      left: 13px;
+      border-width: 1px 0 0 1px;
+    }
+
+    .dropzone::after {
+      right: 13px;
+      bottom: 13px;
+      border-width: 0 1px 1px 0;
+    }
+
+    .drop-empty { padding: 34px; text-align: center; }
+
+    .upload-symbol {
+      display: grid;
+      width: 58px;
+      height: 58px;
+      margin: 0 auto 19px;
+      place-items: center;
+      border: 1px solid rgba(214, 243, 106, .45);
+      color: var(--acid);
+      font-family: var(--mono);
+      font-size: 23px;
+      background: rgba(214, 243, 106, .08);
+      transform: rotate(45deg);
+    }
+
+    .upload-symbol span { transform: rotate(-45deg); }
+
+    .drop-title {
+      margin-bottom: 9px;
+      color: var(--paper);
+      font-size: 17px;
+      font-weight: 650;
+    }
+
+    .drop-hint {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    .preview-wrap {
+      position: relative;
+      display: grid;
+      width: 100%;
+      min-height: 312px;
+      max-height: min(520px, 62vh);
+      place-items: center;
+      padding: 17px;
+      overflow: auto;
+    }
+
+    .preview-wrap[hidden],
+    .result-view[hidden],
+    .result-empty[hidden],
+    .error-view[hidden] { display: none; }
+
+    .preview-image {
+      display: block;
+      width: auto;
+      height: auto;
+      max-width: 100%;
+      max-height: min(486px, 58vh);
+      object-fit: contain;
+      filter: saturate(.88) contrast(1.03);
+    }
+
+    .preview-label {
+      position: absolute;
+      right: 10px;
+      bottom: 10px;
+      max-width: calc(100% - 20px);
+      padding: 7px 9px;
+      color: var(--paper);
+      background: rgba(13, 17, 20, .82);
+      backdrop-filter: blur(8px);
+      font-family: var(--mono);
+      font-size: 10px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .preview-open {
+      position: absolute;
+      top: 27px;
+      right: 27px;
+      padding: 7px 9px;
+      border: 1px solid rgba(231, 238, 233, .25);
+      color: var(--paper);
+      background: rgba(13, 17, 20, .78);
+      backdrop-filter: blur(8px);
+      font-family: var(--mono);
+      font-size: 9px;
+      transition: color .2s ease, border-color .2s ease, background .2s ease;
+    }
+
+    .preview-open:hover {
+      border-color: var(--acid);
+      color: var(--acid);
+      background: rgba(13, 17, 20, .92);
+    }
+
+    .upload-actions {
+      display: grid;
+      grid-template-columns: 1fr 1.25fr;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .button {
+      min-height: 48px;
+      padding: 0 16px;
+      border: 1px solid var(--line-strong);
+      border-radius: 0;
+      color: var(--paper);
+      background: transparent;
+      font-size: 13px;
+      font-weight: 700;
+      transition: color .2s ease, background .2s ease, border-color .2s ease, transform .2s ease;
+    }
+
+    .button:hover:not(:disabled) {
+      border-color: var(--cyan);
+      color: var(--cyan);
+      transform: translateY(-1px);
+    }
+
+    .button-primary {
+      border-color: var(--acid);
+      color: var(--ink);
+      background: var(--acid);
+    }
+
+    .button-primary:hover:not(:disabled) {
+      border-color: var(--acid);
+      color: var(--ink);
+      background: #e4ff83;
+    }
+
+    .button:disabled {
+      cursor: not-allowed;
+      opacity: .36;
+    }
+
+    .button.is-loading { position: relative; color: transparent; }
+
+    .button.is-loading::after {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 16px;
+      height: 16px;
+      content: "";
+      border: 2px solid rgba(13, 17, 20, .28);
+      border-top-color: var(--ink);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      transform: translate(-50%, -50%);
+    }
+
+    .key-field { margin-top: 23px; }
+
+    .field-label {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 9px;
+      color: var(--paper);
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .field-label span {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 400;
+    }
+
+    .key-input-wrap { position: relative; }
+
+    .key-input {
+      width: 100%;
+      min-height: 43px;
+      padding: 0 43px 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 0;
+      outline: 0;
+      color: var(--paper);
+      background: rgba(7, 11, 13, .36);
+      font-family: var(--mono);
+      font-size: 11px;
+      transition: border-color .2s ease, box-shadow .2s ease;
+    }
+
+    .key-input:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 3px rgba(142, 228, 220, .1);
+    }
+
+    .toggle-key {
+      position: absolute;
+      top: 50%;
+      right: 4px;
+      display: grid;
+      width: 35px;
+      height: 35px;
+      place-items: center;
+      border: 0;
+      color: var(--muted);
+      background: transparent;
+      font-family: var(--mono);
+      font-size: 10px;
+      transform: translateY(-50%);
+    }
+
+    .field-note {
+      margin: 9px 0 0;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.6;
+    }
+
+    .result-panel { min-height: 100%; }
+
+    .result-body {
+      display: flex;
+      min-height: 470px;
+      flex-direction: column;
+      justify-content: center;
+      padding: 34px 30px;
+    }
+
+    .result-empty { text-align: center; }
+
+    .radar {
+      position: relative;
+      display: grid;
+      width: 142px;
+      height: 142px;
+      margin: 0 auto 26px;
+      place-items: center;
+      border: 1px solid rgba(142, 228, 220, .24);
+      border-radius: 50%;
+      color: var(--cyan);
+      font-family: var(--mono);
+      font-size: 11px;
+      background: radial-gradient(circle, rgba(142, 228, 220, .1), transparent 64%);
+    }
+
+    .radar::before,
+    .radar::after {
+      position: absolute;
+      content: "";
+      border: 1px solid rgba(142, 228, 220, .16);
+      border-radius: 50%;
+    }
+
+    .radar::before { inset: 21px; }
+    .radar::after { inset: 43px; border-color: rgba(214, 243, 106, .34); }
+
+    .radar-line {
+      position: absolute;
+      width: 1px;
+      height: 100%;
+      background: linear-gradient(transparent, rgba(142, 228, 220, .45), transparent);
+      transform: rotate(45deg);
+    }
+
+    .empty-title {
+      margin-bottom: 8px;
+      color: var(--paper);
+      font-size: 18px;
+      font-weight: 650;
+    }
+
+    .empty-copy {
+      max-width: 260px;
+      margin: 0 auto;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.75;
+    }
+
+    .result-kicker {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 17px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .result-kicker strong { color: var(--acid); font-weight: 500; }
+
+    .plate-display {
+      position: relative;
+      display: grid;
+      min-height: 126px;
+      margin-bottom: 26px;
+      place-items: center;
+      border: 1px solid rgba(214, 243, 106, .42);
+      color: #101719;
+      background: linear-gradient(112deg, #d9ef7e, #b9d555 58%, #ebff99);
+      box-shadow: 12px 12px 0 rgba(214, 243, 106, .08), 0 0 45px rgba(214, 243, 106, .12);
+      overflow: hidden;
+    }
+
+    .plate-display::before,
+    .plate-display::after {
+      position: absolute;
+      content: "";
+      border: 1px solid rgba(16, 23, 25, .2);
+      border-radius: 50%;
+    }
+
+    .plate-display::before { width: 245px; height: 245px; transform: translate(52%, -45%); }
+    .plate-display::after { width: 170px; height: 170px; transform: translate(-64%, 60%); }
+
+    .plate-number {
+      position: relative;
+      z-index: 1;
+      max-width: 100%;
+      padding: 0 14px;
+      overflow: hidden;
+      font-family: var(--mono);
+      font-size: clamp(31px, 5vw, 48px);
+      font-weight: 900;
+      letter-spacing: .08em;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .plate-label {
+      position: absolute;
+      right: 12px;
+      bottom: 10px;
+      z-index: 1;
+      color: rgba(16, 23, 25, .58);
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: .08em;
+    }
+
+    .result-facts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      margin-bottom: 22px;
+      border: 1px solid var(--line);
+      background: var(--line);
+    }
+
+    .fact {
+      min-height: 68px;
+      padding: 13px 14px;
+      background: rgba(13, 17, 20, .38);
+    }
+
+    .fact-label {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .fact-value {
+      color: var(--paper);
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+
+    .request-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-top: 3px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 9px;
+    }
+
+    .request-id {
+      max-width: 230px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .copy-button {
+      padding: 0;
+      border: 0;
+      color: var(--cyan);
+      background: transparent;
+      font-family: var(--mono);
+      font-size: 9px;
+    }
+
+    .copy-button:hover { color: var(--acid); }
+
+    .error-view {
+      padding: 20px;
+      border: 1px solid rgba(255, 142, 121, .3);
+      background: rgba(255, 142, 121, .06);
+    }
+
+    .error-code {
+      margin-bottom: 12px;
+      color: var(--danger);
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: .12em;
+    }
+
+    .error-message {
+      margin: 0;
+      color: var(--paper);
+      font-size: 14px;
+      line-height: 1.65;
+    }
+
+    .signal-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      margin-top: 18px;
+      border: 1px solid var(--line);
+      background: rgba(23, 31, 35, .55);
+    }
+
+    .signal {
+      min-height: 82px;
+      padding: 16px 20px;
+      border-right: 1px solid var(--line);
+    }
+
+    .signal:last-child { border-right: 0; }
+
+    .signal-label {
+      display: block;
+      margin-bottom: 9px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    .signal-value { color: var(--paper); font-size: 13px; }
+
+    .footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 100px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: .04em;
+    }
+
+    .footer a {
+      color: var(--muted);
+      text-decoration: none;
+      transition: color .2s ease;
+    }
+
+    .footer a:hover { color: var(--acid); }
+
+    .deerflow-signature {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      opacity: .72;
+    }
+
+    .deerflow-signature::before {
+      width: 5px;
+      height: 5px;
+      content: "";
+      border: 1px solid var(--acid);
+      transform: rotate(45deg);
+    }
+
+    .fade-in {
+      animation: rise .65s cubic-bezier(.2, .8, .2, 1) both;
+    }
+
+    .delay-1 { animation-delay: .08s; }
+    .delay-2 { animation-delay: .16s; }
+    .delay-3 { animation-delay: .24s; }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+
+    @media (max-width: 820px) {
+      .hero { grid-template-columns: 1fr; gap: 30px; padding: 58px 0 38px; }
+      .hero-orbit { min-height: 115px; border-radius: 12px 50% 12px 50%; }
+      .workspace { grid-template-columns: 1fr; }
+      .result-body { min-height: 390px; }
+    }
+
+    @media (max-width: 560px) {
+      .app-shell { width: min(100% - 28px, 1180px); }
+      .topbar { min-height: 72px; }
+      .top-link { display: none; }
+      h1 { font-size: clamp(40px, 14vw, 65px); }
+      .hero { padding-top: 48px; }
+      .panel-header, .upload-body { padding-right: 18px; padding-left: 18px; }
+      .dropzone { min-height: 270px; }
+      .result-body { padding: 28px 18px; }
+      .signal-strip { grid-template-columns: 1fr; }
+      .signal { border-right: 0; border-bottom: 1px solid var(--line); }
+      .signal:last-child { border-bottom: 0; }
+      .footer { align-items: flex-start; flex-direction: column; justify-content: center; gap: 13px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar fade-in">
+      <a class="brand" href="/os/inter-api/lpr/ui/" aria-label="车牌识别终端首页">
+        <span class="brand-mark">识别</span>
+        <span>车牌识别终端</span>
+      </a>
+      <div class="topbar-right">
+        <a class="top-link" href="/os/inter-api/lpr/docs" target="_blank" rel="noreferrer">接口文档 ↗</a>
+        <div class="system-status" id="systemStatus" aria-live="polite">
+          <span class="status-dot"></span>
+          <span id="systemStatusText">检查中</span>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="workspace">
+        <article class="panel upload-panel fade-in delay-2">
+          <header class="panel-header">
+            <div>
+              <h2 class="panel-title">上传识别图片</h2>
+              <p class="panel-subtitle">拖拽 / 上传 / 拍照</p>
+            </div>
+            <span class="panel-index">输入 01</span>
+          </header>
+          <div class="upload-body">
+            <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-label="选择或拖入车牌图片">
+              <div class="drop-empty" id="dropEmpty">
+                <div class="upload-symbol" aria-hidden="true"><span>↑</span></div>
+                <div class="drop-title">把图片放到这里</div>
+                <p class="drop-hint">支持 JPG、PNG、WEBP 等图片<br>也可以直接点击下方按钮，或粘贴剪贴板图片</p>
+              </div>
+              <div class="preview-wrap" id="previewWrap" hidden>
+                <img class="preview-image" id="previewImage" alt="待识别的车辆图片">
+                <button class="preview-open" id="openOriginal" type="button">查看完整原图 ↗</button>
+                <span class="preview-label" id="previewLabel"></span>
+              </div>
+              <input id="fileInput" type="file" accept="image/*" capture="environment" hidden>
+            </div>
+
+            <div class="upload-actions">
+              <button class="button" id="chooseButton" type="button">选择图片</button>
+              <button class="button button-primary" id="recognizeButton" type="button" disabled>开始识别 →</button>
+            </div>
+
+            <div class="key-field">
+              <label class="field-label" for="apiKey">
+                接口密钥
+                <span>可选 / 按服务端配置</span>
+              </label>
+              <div class="key-input-wrap">
+                <input class="key-input" id="apiKey" type="password" autocomplete="off" placeholder="如果服务端启用了接口鉴权，请在这里输入">
+                <button class="toggle-key" id="toggleKey" type="button" aria-label="显示接口密钥">显示</button>
+              </div>
+              <p class="field-note">密钥只保存在当前页面内存中，不会写入浏览器本地存储。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="panel result-panel fade-in delay-3">
+          <header class="panel-header">
+            <div>
+              <h2 class="panel-title">识别读数</h2>
+              <p class="panel-subtitle">识别结果 / 服务信息</p>
+            </div>
+            <span class="panel-index">输出 02</span>
+          </header>
+          <div class="result-body" aria-live="polite">
+            <div class="result-empty" id="resultEmpty">
+              <div class="radar"><span class="radar-line"></span><span>等待</span></div>
+              <h3 class="empty-title">等待一张车牌</h3>
+              <p class="empty-copy">识别完成后，车牌号和服务端遥测信息会出现在这里。</p>
+            </div>
+
+            <div class="result-view" id="resultView" hidden>
+              <div class="result-kicker"><span>车牌号码</span><strong id="resultStateLabel">识别成功</strong></div>
+              <div class="plate-display">
+                <div class="plate-number" id="plateNumber">—</div>
+                <span class="plate-label">本地识别</span>
+              </div>
+              <div class="result-facts">
+                <div class="fact"><span class="fact-label">识别完成时间</span><span class="fact-value" id="recognizedAt">—</span></div>
+                <div class="fact"><span class="fact-label">服务端耗时</span><span class="fact-value" id="processingTime">—</span></div>
+                <div class="fact"><span class="fact-label">置信度</span><span class="fact-value" id="confidence">—</span></div>
+                <div class="fact"><span class="fact-label">客户端耗时</span><span class="fact-value" id="roundTrip">—</span></div>
+              </div>
+              <div class="request-row">
+                <span class="request-id" id="requestId">请求编号 —</span>
+                <button class="copy-button" id="copyRequest" type="button">复制编号</button>
+              </div>
+            </div>
+
+            <div class="error-view" id="errorView" hidden>
+              <div class="error-code" id="errorCode">请求失败</div>
+              <p class="error-message" id="errorMessage">识别失败，请重试。</p>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="signal-strip fade-in delay-3" aria-label="服务信息">
+        <div class="signal"><span class="signal-label">识别引擎</span><span class="signal-value">主模型 · 复核 · 本地兜底</span></div>
+        <div class="signal"><span class="signal-label">排队策略</span><span class="signal-value">最多 10 个请求，排队等待</span></div>
+        <div class="signal"><span class="signal-label">数据处理</span><span class="signal-value">图片仅在本服务处理</span></div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>车牌识别终端 / <span id="currentYear"></span> / 版本 0.1</span>
+      <a class="deerflow-signature" href="https://deerflow.tech" target="_blank" rel="noreferrer">Created By Deerflow</a>
+    </footer>
+  </div>
+
+  <script>
+    (() => {
+      const API_BASE = "/os/inter-api/lpr";
+      const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+      const fileInput = document.getElementById("fileInput");
+      const dropzone = document.getElementById("dropzone");
+      const dropEmpty = document.getElementById("dropEmpty");
+      const previewWrap = document.getElementById("previewWrap");
+      const previewImage = document.getElementById("previewImage");
+      const previewLabel = document.getElementById("previewLabel");
+      const openOriginal = document.getElementById("openOriginal");
+      const chooseButton = document.getElementById("chooseButton");
+      const recognizeButton = document.getElementById("recognizeButton");
+      const apiKey = document.getElementById("apiKey");
+      const toggleKey = document.getElementById("toggleKey");
+      const resultEmpty = document.getElementById("resultEmpty");
+      const resultView = document.getElementById("resultView");
+      const errorView = document.getElementById("errorView");
+      const errorCode = document.getElementById("errorCode");
+      const errorMessage = document.getElementById("errorMessage");
+      const systemStatus = document.getElementById("systemStatus");
+      const systemStatusText = document.getElementById("systemStatusText");
+      let selectedFile = null;
+      let previewUrl = null;
+      let latestRequestId = "";
+      let isBusy = false;
+
+      document.getElementById("currentYear").textContent = new Date().getFullYear();
+
+      function setSystemStatus(ready, label) {
+        systemStatus.classList.toggle("is-offline", !ready);
+        systemStatusText.textContent = label;
+      }
+
+      async function checkReady() {
+        try {
+          const response = await fetch(`${API_BASE}/readyz`, { headers: { Accept: "application/json" } });
+          const body = await response.json();
+          if (!response.ok || body.code !== 0) throw new Error(body.message || "服务不可用");
+          setSystemStatus(true, "服务就绪");
+        } catch (_) {
+          setSystemStatus(false, "服务不可用");
+        }
+      }
+
+      function clearPreviewUrl() {
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
+        previewUrl = null;
+      }
+
+      function resetResult() {
+        resultEmpty.hidden = false;
+        resultView.hidden = true;
+        errorView.hidden = true;
+        latestRequestId = "";
+      }
+
+      function showError(message, status) {
+        resultEmpty.hidden = true;
+        resultView.hidden = true;
+        errorView.hidden = false;
+        errorCode.textContent = `请求失败 / ${status || "错误"}`;
+        errorMessage.textContent = message;
+      }
+
+      function setFile(file) {
+        if (!file) return;
+        if (!file.type || !file.type.startsWith("image/")) {
+          showError("只支持上传图片文件。", 400);
+          return;
+        }
+        if (file.size > MAX_UPLOAD_BYTES) {
+          showError("图片大小不能超过 10 MB。", 413);
+          return;
+        }
+        selectedFile = file;
+        clearPreviewUrl();
+        previewUrl = URL.createObjectURL(file);
+        previewImage.src = previewUrl;
+        previewLabel.textContent = `${file.name} · ${(file.size / 1024 / 1024).toFixed(2)} MB`;
+        dropEmpty.hidden = true;
+        previewWrap.hidden = false;
+        recognizeButton.disabled = false;
+        resetResult();
+      }
+
+      function clearFile() {
+        selectedFile = null;
+        fileInput.value = "";
+        clearPreviewUrl();
+        previewImage.removeAttribute("src");
+        previewWrap.hidden = true;
+        dropEmpty.hidden = false;
+        recognizeButton.disabled = true;
+        resetResult();
+      }
+
+      async function recognize() {
+        if (!selectedFile || isBusy) return;
+        isBusy = true;
+        recognizeButton.disabled = true;
+        recognizeButton.classList.add("is-loading");
+        recognizeButton.textContent = "识别中";
+        resultEmpty.hidden = true;
+        resultView.hidden = true;
+        errorView.hidden = true;
+        const requestId = crypto.randomUUID ? crypto.randomUUID() : `ui-${Date.now()}`;
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+        const headers = { "X-Request-ID": requestId, Accept: "application/json" };
+        if (apiKey.value.trim()) headers["X-API-Key"] = apiKey.value.trim();
+        const started = performance.now();
+
+        try {
+          const response = await fetch(`${API_BASE}/recognitions`, { method: "POST", headers, body: formData });
+          const body = await response.json().catch(() => ({}));
+          const roundTrip = Math.round(performance.now() - started);
+          if (!response.ok || body.code !== 0 || !body.data) {
+            throw Object.assign(new Error(body.message || "识别服务返回了无效结果"), { status: response.status || 500 });
+          }
+          renderSuccess(body.data, roundTrip);
+        } catch (error) {
+          showError(error.message || "识别失败，请检查服务状态后重试。", error.status || "网络错误");
+        } finally {
+          isBusy = false;
+          recognizeButton.classList.remove("is-loading");
+          recognizeButton.textContent = "开始识别 →";
+          recognizeButton.disabled = !selectedFile;
+        }
+      }
+
+      function formatDate(value) {
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return value || "—";
+        return new Intl.DateTimeFormat("zh-CN", { dateStyle: "medium", timeStyle: "medium" }).format(date);
+      }
+
+      function renderSuccess(data, roundTrip) {
+        resultEmpty.hidden = true;
+        errorView.hidden = true;
+        resultView.hidden = false;
+        document.getElementById("plateNumber").textContent = data.plate_number || "未识别";
+        document.getElementById("recognizedAt").textContent = formatDate(data.recognized_at);
+        document.getElementById("processingTime").textContent = `${Number(data.processing_time_ms || 0).toFixed(2)} 毫秒`;
+        document.getElementById("confidence").textContent = `${(Number(data.confidence || 0) * 100).toFixed(2)}%`;
+        document.getElementById("roundTrip").textContent = `${roundTrip} 毫秒`;
+        latestRequestId = data.request_id || "";
+        document.getElementById("requestId").textContent = `请求编号 ${latestRequestId || "—"}`;
+      }
+
+      chooseButton.addEventListener("click", () => fileInput.click());
+      fileInput.addEventListener("change", () => setFile(fileInput.files[0]));
+      recognizeButton.addEventListener("click", recognize);
+      openOriginal.addEventListener("click", (event) => {
+        event.stopPropagation();
+        if (previewUrl) window.open(previewUrl, "_blank", "noopener,noreferrer");
+      });
+      toggleKey.addEventListener("click", () => {
+        const visible = apiKey.type === "text";
+        apiKey.type = visible ? "password" : "text";
+        toggleKey.textContent = visible ? "显示" : "隐藏";
+        toggleKey.setAttribute("aria-label", visible ? "显示接口密钥" : "隐藏接口密钥");
+      });
+
+      dropzone.addEventListener("click", (event) => {
+        if (!event.target.closest("button")) fileInput.click();
+      });
+      dropzone.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          fileInput.click();
+        }
+      });
+      ["dragenter", "dragover"].forEach((name) => dropzone.addEventListener(name, (event) => {
+        event.preventDefault();
+        dropzone.classList.add("is-dragging");
+      }));
+      ["dragleave", "drop"].forEach((name) => dropzone.addEventListener(name, (event) => {
+        event.preventDefault();
+        dropzone.classList.remove("is-dragging");
+      }));
+      dropzone.addEventListener("drop", (event) => setFile(event.dataTransfer.files[0]));
+      document.addEventListener("paste", (event) => {
+        const image = [...(event.clipboardData?.items || [])].find((item) => item.type.startsWith("image/"));
+        if (image) setFile(image.getAsFile());
+      });
+      document.getElementById("copyRequest").addEventListener("click", async () => {
+        if (!latestRequestId) return;
+        try {
+          await navigator.clipboard.writeText(latestRequestId);
+          document.getElementById("copyRequest").textContent = "已复制";
+          setTimeout(() => { document.getElementById("copyRequest").textContent = "复制编号"; }, 1200);
+        } catch (_) { /* Clipboard permission is optional. */ }
+      });
+
+      checkReady();
+      setInterval(checkReady, 30000);
+      window.addEventListener("beforeunload", clearPreviewUrl);
+    })();
+  </script>
+</body>
+</html>

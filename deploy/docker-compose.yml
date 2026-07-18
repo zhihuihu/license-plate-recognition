@@ -1,0 +1,38 @@
+name: license-plate-recognition
+
+services:
+  lpr:
+    image: ${LPR_IMAGE:?Set LPR_IMAGE in deploy/.env}
+    pull_policy: never
+    restart: unless-stopped
+    init: true
+    env_file:
+      - .env
+    environment:
+      HYPERLPR_MODEL_ROOT: /app/models/hyperlpr3
+      PADDLEOCR_MODEL_ROOT: /app/models/paddleocr
+      HOME: /tmp
+      XDG_CACHE_HOME: /tmp/.cache
+    ports:
+      - "${LPR_PORT:-8000}:8000"
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=1g
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: 30s
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - >-
+          import urllib.request;
+          response=urllib.request.urlopen('http://127.0.0.1:8000/os/inter-api/lpr/readyz', timeout=3);
+          raise SystemExit(0 if response.status == 200 else 1)
+      interval: 30s
+      timeout: 5s
+      start_period: 90s
+      retries: 3

@@ -1,0 +1,6 @@
+-r requirements.txt
+
+# PaddlePaddle 的 Python 和平台支持会随版本变化；如果当前环境没有
+# 匹配的 wheel，请按照官方安装文档选择兼容的独立虚拟环境。
+paddlepaddle>=3.0,<3.4
+paddleocr>=3.4,<4
