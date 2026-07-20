@@ -42,6 +42,7 @@ jobs:
           test "$(wc -c < models/paddleocr/PP-OCRv6_medium_det_infer/inference.pdiparams)" -gt 1000000
           test "$(wc -c < models/paddleocr/PP-OCRv6_medium_rec_infer/inference.pdiparams)" -gt 1000000
           test "$(wc -c < models/paddleocr/PP-LCNet_x1_0_textline_ori_infer/inference.pdiparams)" -gt 1000000
+          test "$(wc -c < models/plate_detector/yolo-v9-t-384-license-plates-end2end.onnx)" -gt 1000000
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3

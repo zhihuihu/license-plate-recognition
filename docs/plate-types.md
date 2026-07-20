@@ -56,7 +56,9 @@
 
 - [app/recognizer/plate_text.py](../app/recognizer/plate_text.py)：省份、普通、新能源、特殊牌型和双层牌文本清洗。
 - [app/recognizer/hyperlpr_engine.py](../app/recognizer/hyperlpr_engine.py)：HyperLPR3 主模型。
-- [app/recognizer/paddleocr_engine.py](../app/recognizer/paddleocr_engine.py)：PaddleOCR 复核。
+- [app/recognizer/plate_detector.py](../app/recognizer/plate_detector.py)：YOLOv9/ONNX 车牌区域检测。
+- [app/recognizer/plate_pipeline.py](../app/recognizer/plate_pipeline.py)：检测车牌区域后交给 PaddleOCR 识别。
+- [app/recognizer/paddleocr_engine.py](../app/recognizer/paddleocr_engine.py)：PaddleOCR 文字识别。
 - [app/recognizer/fallback.py](../app/recognizer/fallback.py)：低置信度回退链。
 
 如果新增牌型规则，必须同时补充真实样例、误识别样例和单元测试，不能只新增一个正则表达式就对外宣称支持。

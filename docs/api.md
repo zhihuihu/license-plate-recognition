@@ -46,7 +46,14 @@ curl.exe -X POST http://localhost:8000/os/inter-api/lpr/recognitions \
     "plate_number": "浙AX7U36",
     "recognized_at": "2026-07-17T06:49:39.182995Z",
     "processing_time_ms": 151.4,
-    "confidence": 0.9999
+    "confidence": 0.9999,
+    "plate_box": {
+      "x1": 120,
+      "y1": 240,
+      "x2": 420,
+      "y2": 315,
+      "confidence": 0.96
+    }
   }
 }
 ```
@@ -60,6 +67,7 @@ curl.exe -X POST http://localhost:8000/os/inter-api/lpr/recognitions \
 | `data.recognized_at` | datetime | 识别完成时间，UTC，带 `Z`。 |
 | `data.processing_time_ms` | number | 服务端实际推理耗时，不包含上传和排队时间。 |
 | `data.confidence` | number | 模型置信度，范围 0 到 1。 |
+| `data.plate_box` | object/null | 检测到的车牌区域；旧的 HyperLPR3/RapidOCR 全图链路可能为 `null`。坐标以原图左上角为原点。 |
 
 ### 失败响应
 

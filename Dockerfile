@@ -9,6 +9,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     OCR_ENGINE=hyperlpr3 \
     HYPERLPR_MODEL_ROOT=/app/models/hyperlpr3 \
     PADDLEOCR_MODEL_ROOT=/app/models/paddleocr \
+    PLATE_DETECTOR_MODEL_PATH=/app/models/plate_detector/yolo-v9-t-384-license-plates-end2end.onnx \
+    PLATE_DETECTOR_MIN_CONFIDENCE=0.40 \
+    PLATE_DETECTOR_PADDING_RATIO=0.08 \
     OFFLINE_MODE=true \
     PADDLEOCR_FALLBACK=true \
     RAPIDOCR_FALLBACK=true \
@@ -55,6 +58,7 @@ required = {
     "models/paddleocr/PP-LCNet_x1_0_textline_ori_infer/inference.json": 1,
     "models/paddleocr/PP-LCNet_x1_0_textline_ori_infer/inference.pdiparams": 1_000_000,
     "models/paddleocr/PP-LCNet_x1_0_textline_ori_infer/inference.yml": 1,
+    "models/plate_detector/yolo-v9-t-384-license-plates-end2end.onnx": 1_000_000,
 }
 
 missing = []

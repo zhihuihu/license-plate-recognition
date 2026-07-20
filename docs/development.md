@@ -14,7 +14,9 @@ app/
 ├── web/index.html             # 内置手动识别页面
 └── recognizer/
     ├── hyperlpr_engine.py     # HyperLPR3 主引擎
-    ├── paddleocr_engine.py    # PaddleOCR 复核引擎
+    ├── paddleocr_engine.py    # PaddleOCR 文字识别引擎
+    ├── plate_detector.py      # YOLOv9/ONNX 车牌区域检测
+    ├── plate_pipeline.py      # 车牌检测 + PaddleOCR 两阶段链路
     ├── rapidocr_engine.py     # RapidOCR 兜底引擎
     ├── fallback.py            # 低置信度回退链
     ├── pool.py                # 多实例池
@@ -39,6 +41,16 @@ $env:OCR_ENGINE = "hyperlpr3"
 $env:PRELOAD_OCR_MODEL = "true"
 uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
+
+使用两阶段检测识别链路测试：
+
+```powershell
+$env:OCR_ENGINE = "paddleocr"
+$env:OFFLINE_MODE = "true"
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
+`paddleocr` 模式先使用 `PLATE_DETECTOR_MODEL_PATH` 指向的 YOLO ONNX 模型定位车牌，再裁剪车牌区域交给 PaddleOCR；后续可替换为现场数据训练的同输入输出兼容 ONNX 检测模型。
 
 当前 Windows Python 3.14 环境可以使用 HyperLPR3 和 RapidOCR。PaddleOCR 需要匹配的 PaddlePaddle 环境；项目已经准备了 Python 3.13 的离线资源，具体见 [../offline/README.md](../offline/README.md)。生产 Docker 镜像使用 Python 3.13 和固定 PaddleOCR 版本。
 

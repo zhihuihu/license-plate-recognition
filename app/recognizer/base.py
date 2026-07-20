@@ -9,9 +9,21 @@ class RecognitionError(RuntimeError):
 
 
 @dataclass(frozen=True, slots=True)
+class PlateBox:
+    """检测模型返回的车牌轴对齐区域。坐标使用原图像素。"""
+
+    x1: int
+    y1: int
+    x2: int
+    y2: int
+    confidence: float
+
+
+@dataclass(frozen=True, slots=True)
 class PlateCandidate:
     plate_number: str
     confidence: float
+    box: PlateBox | None = None
 
 
 class PlateRecognizer(Protocol):

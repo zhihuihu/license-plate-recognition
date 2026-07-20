@@ -97,6 +97,11 @@ class PaddleOcrRecognizer:
         if image is None:
             raise RecognitionError("上传内容不是有效的图片")
 
+        return self.recognize_image(image)
+
+    def recognize_image(self, image: np.ndarray) -> PlateCandidate:
+        """识别已经解码的 BGR 图片，供检测后裁剪链路复用。"""
+
         try:
             with self._inference_lock:
                 engine = self._get_engine()

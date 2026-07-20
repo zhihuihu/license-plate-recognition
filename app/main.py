@@ -20,12 +20,14 @@ from .errors import (
 )
 from .middleware import RequestContextMiddleware
 from .recognizer import (
+    DetectedPaddleOcrRecognizer,
     FallbackRecognizer,
     HyperLprRecognizer,
     PaddleOcrRecognizer,
     RapidOcrRecognizer,
     RecognitionError,
     RecognizerPool,
+    YoloV9PlateDetector,
 )
 from .security import require_api_key
 from .schemas import ApiResponse, ErrorResponse, RecognitionResponse
@@ -37,6 +39,22 @@ logger = logging.getLogger("license_plate.app")
 
 
 def _create_recognizer():
+    if settings.ocr_engine == "paddleocr":
+        primary = DetectedPaddleOcrRecognizer(
+            detector=YoloV9PlateDetector(
+                model_path=settings.plate_detector_model_path,
+                minimum_confidence=settings.plate_detector_min_confidence,
+            ),
+            ocr=PaddleOcrRecognizer(model_root=settings.paddleocr_model_root),
+            padding_ratio=settings.plate_detector_padding_ratio,
+        )
+        if settings.rapidocr_fallback:
+            return FallbackRecognizer(
+                primary,
+                RapidOcrRecognizer(),
+                minimum_confidence=settings.paddleocr_min_confidence,
+            )
+        return primary
     if settings.ocr_engine in {"hyperlpr3", "hyperlpr"}:
         primary = HyperLprRecognizer(
             model_root=settings.hyperlpr_model_root,

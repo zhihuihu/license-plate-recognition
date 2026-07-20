@@ -76,13 +76,16 @@ docker compose up -d
 | 变量 | 常用值 | 作用 |
 | --- | --- | --- |
 | `API_KEYS` | 随机长密钥 | 生产环境接口鉴权，多个密钥用逗号分隔 |
-| `OCR_ENGINE` | `hyperlpr3` | 主识别引擎 |
+| `OCR_ENGINE` | `hyperlpr3` | 主识别引擎，可选 `hyperlpr3`、`paddleocr`、`rapidocr`；`paddleocr` 会先用 YOLO 定位车牌再识别 |
 | `OFFLINE_MODE` | `true` | Docker/无外网环境禁止联网下载模型 |
 | `PADDLEOCR_FALLBACK` | `true` | 是否启用 PaddleOCR 复核 |
 | `RAPIDOCR_FALLBACK` | `true` | 是否启用 RapidOCR 兜底 |
 | `MAX_CONCURRENT_REQUESTS` | `10` | 最大排队请求数量，不等于每秒吞吐量 |
 | `OCR_INSTANCE_COUNT` | `1`～`2` | OCR 独立实例数量，需要按压测和内存调整 |
 | `INFERENCE_QUEUE_TIMEOUT_MS` | `30000` | 排队超时后返回 503，不返回 429 |
+| `PLATE_DETECTOR_MODEL_PATH` | `models/plate_detector/yolo-v9-t-384-license-plates-end2end.onnx` | `paddleocr` 模式使用的 YOLO 车牌检测模型路径 |
+| `PLATE_DETECTOR_MIN_CONFIDENCE` | `0.40` | `paddleocr` 模式下 YOLO 车牌检测最低置信度 |
+| `PLATE_DETECTOR_PADDING_RATIO` | `0.08` | 车牌框裁剪时四周扩展比例 |
 | `LPR_IMAGE` | GHCR 镜像地址 | Compose 使用的镜像地址 |
 | `LPR_PORT` | `8000` | 宿主机访问端口 |
 
@@ -105,6 +108,13 @@ curl.exe -X POST http://localhost:8000/os/inter-api/lpr/recognitions -H "X-API-K
     "recognized_at": "2026-07-17T06:49:39.182995Z",
     "processing_time_ms": 151.4,
     "confidence": 0.9999,
+    "plate_box": {
+      "x1": 120,
+      "y1": 240,
+      "x2": 420,
+      "y2": 315,
+      "confidence": 0.96
+    },
     "request_id": "..."
   }
 }

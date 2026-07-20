@@ -34,13 +34,16 @@ docker run --env-file deploy/.env.docker -p 8000:8000 ghcr.io/zhihuihu/license-p
 | 变量 | 默认值 | 说明 |
 | --- | --- | --- |
 | `API_KEYS` | 空 | 逗号分隔的接口密钥。生产环境必须配置；请求通过 `X-API-Key` 传入。 |
-| `OCR_ENGINE` | `hyperlpr3` | 主引擎，可选 `hyperlpr3` 或 `rapidocr`。 |
+| `OCR_ENGINE` | `hyperlpr3` | 主引擎，可选 `hyperlpr3`、`paddleocr` 或 `rapidocr`。`paddleocr` 模式会先用 YOLO 检测车牌，再把车牌裁剪图交给 PaddleOCR。 |
 | `OFFLINE_MODE` | `false` | `true` 时禁止模型联网下载。Docker 和无外网环境应保持为 `true`。 |
 | `PADDLEOCR_FALLBACK` | `true` | 是否启用 PaddleOCR 复核。 |
 | `RAPIDOCR_FALLBACK` | `true` | 是否启用 RapidOCR 最终兜底。 |
 | `PRELOAD_OCR_MODEL` | `true` | 启动时预热模型；生产环境建议开启。 |
 | `HYPERLPR_MODEL_ROOT` | `models/hyperlpr3` | HyperLPR3 模型目录。Docker 内固定为 `/app/models/hyperlpr3`。 |
 | `PADDLEOCR_MODEL_ROOT` | `models/paddleocr` | PaddleOCR 模型目录。Docker 内固定为 `/app/models/paddleocr`。 |
+| `PLATE_DETECTOR_MODEL_PATH` | `models/plate_detector/yolo-v9-t-384-license-plates-end2end.onnx` | `paddleocr` 模式使用的车牌检测 ONNX 模型。Docker 镜像已内置。 |
+| `PLATE_DETECTOR_MIN_CONFIDENCE` | `0.40` | 车牌检测最低置信度。提高可减少误检，过高会漏掉远距离车牌。 |
+| `PLATE_DETECTOR_PADDING_RATIO` | `0.08` | 检测框四周扩展比例，用于给 OCR 保留边缘字符。 |
 | `HYPERLPR_DETECT_LEVEL` | `low` | `low` 速度优先；`high` 适合远距离小车牌。 |
 | `HYPERLPR_MIN_CONFIDENCE` | `0.80` | HyperLPR3 低于该值时进入复核链路。 |
 | `PADDLEOCR_MIN_CONFIDENCE` | `0.80` | PaddleOCR 低于该值时继续回退。 |
@@ -81,6 +84,8 @@ MAX_CONCURRENT_REQUESTS=10
 OCR_INSTANCE_COUNT=1
 INFERENCE_QUEUE_TIMEOUT_MS=30000
 ```
+
+测试两阶段 PaddleOCR 链路时，将 `OCR_ENGINE` 临时改为 `paddleocr`。该模式使用内置 YOLOv9 车牌检测 ONNX 模型定位车牌，再调用本地 PaddleOCR；测试完成后改回 `hyperlpr3` 即可。
 
 ### 多实例调优
 
