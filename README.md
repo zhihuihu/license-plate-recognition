@@ -2,6 +2,8 @@
 
 面向停车场场景的本地车牌识别服务。上传车辆图片后，返回标准化车牌号、识别完成时间、服务端处理耗时、置信度和请求编号。
 
+项目整体按 AGPL-3.0 发布；`yolo26` 识别链路集成并修改了 [we0091234/yolo26-plate](https://github.com/we0091234/yolo26-plate) 的模型推理思路，第三方来源和模型转换信息见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+
 服务运行在自己的机器或 Docker 容器中，图片不会发送到远程识别接口。项目默认使用 HyperLPR3 主识别，低置信度时使用 PaddleOCR 复核，最后使用 RapidOCR 本地兜底。
 
 ## 能做什么
@@ -76,7 +78,7 @@ docker compose up -d
 | 变量 | 常用值 | 作用 |
 | --- | --- | --- |
 | `API_KEYS` | 随机长密钥 | 生产环境接口鉴权，多个密钥用逗号分隔 |
-| `OCR_ENGINE` | `hyperlpr3` | 主识别引擎，可选 `hyperlpr3`、`paddleocr`、`rapidocr`；`paddleocr` 会先用 YOLO 定位车牌再识别 |
+| `OCR_ENGINE` | `hyperlpr3` | 主识别引擎，可选 `hyperlpr3`、`paddleocr`、`yolo26`、`rapidocr`；`yolo26` 使用中国车牌专用 Pose 检测和识别模型 |
 | `OFFLINE_MODE` | `true` | Docker/无外网环境禁止联网下载模型 |
 | `PADDLEOCR_FALLBACK` | `true` | 是否启用 PaddleOCR 复核 |
 | `RAPIDOCR_FALLBACK` | `true` | 是否启用 RapidOCR 兜底 |
@@ -86,6 +88,9 @@ docker compose up -d
 | `PLATE_DETECTOR_MODEL_PATH` | `models/plate_detector/yolo-v9-t-384-license-plates-end2end.onnx` | `paddleocr` 模式使用的 YOLO 车牌检测模型路径 |
 | `PLATE_DETECTOR_MIN_CONFIDENCE` | `0.40` | `paddleocr` 模式下 YOLO 车牌检测最低置信度 |
 | `PLATE_DETECTOR_PADDING_RATIO` | `0.08` | 车牌框裁剪时四周扩展比例 |
+| `YOLO26_DETECTOR_MODEL_PATH` | `models/plate_detector/yolo26s-plate-detect.onnx` | `yolo26` 模式的 Pose 检测模型路径 |
+| `YOLO26_RECOGNIZER_MODEL_PATH` | `models/plate_detector/plate_rec_color.onnx` | `yolo26` 模式的专用字符识别模型路径 |
+| `YOLO26_MIN_CONFIDENCE` | `0.20` | `yolo26` 车牌检测最低置信度 |
 | `LPR_IMAGE` | GHCR 镜像地址 | Compose 使用的镜像地址 |
 | `LPR_PORT` | `8000` | 宿主机访问端口 |
 
@@ -138,7 +143,7 @@ curl.exe -X POST http://localhost:8000/os/inter-api/lpr/recognitions -H "X-API-K
 ```text
 app/                         在线服务、识别引擎和内置页面
 tests/                       API 和识别适配器测试
-models/                      HyperLPR3/PaddleOCR 模型，使用 Git LFS
+models/                      HyperLPR3/PaddleOCR/YOLO26 模型，使用 Git LFS
 deploy/                      Docker Compose、GHCR 和离线导入说明
 offline/                     Windows x64 / Python 3.13 离线资源
 docs/                        配置、API、开发和扩展文档

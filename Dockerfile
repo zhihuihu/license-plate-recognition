@@ -12,6 +12,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PLATE_DETECTOR_MODEL_PATH=/app/models/plate_detector/yolo-v9-t-384-license-plates-end2end.onnx \
     PLATE_DETECTOR_MIN_CONFIDENCE=0.40 \
     PLATE_DETECTOR_PADDING_RATIO=0.08 \
+    YOLO26_DETECTOR_MODEL_PATH=/app/models/plate_detector/yolo26s-plate-detect.onnx \
+    YOLO26_RECOGNIZER_MODEL_PATH=/app/models/plate_detector/plate_rec_color.onnx \
+    YOLO26_MIN_CONFIDENCE=0.20 \
     OFFLINE_MODE=true \
     PADDLEOCR_FALLBACK=true \
     RAPIDOCR_FALLBACK=true \
@@ -59,6 +62,8 @@ required = {
     "models/paddleocr/PP-LCNet_x1_0_textline_ori_infer/inference.pdiparams": 1_000_000,
     "models/paddleocr/PP-LCNet_x1_0_textline_ori_infer/inference.yml": 1,
     "models/plate_detector/yolo-v9-t-384-license-plates-end2end.onnx": 1_000_000,
+    "models/plate_detector/yolo26s-plate-detect.onnx": 10_000_000,
+    "models/plate_detector/plate_rec_color.onnx": 500_000,
 }
 
 missing = []

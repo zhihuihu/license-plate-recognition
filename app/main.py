@@ -28,6 +28,7 @@ from .recognizer import (
     RecognitionError,
     RecognizerPool,
     YoloV9PlateDetector,
+    Yolo26PlateRecognizer,
 )
 from .security import require_api_key
 from .schemas import ApiResponse, ErrorResponse, RecognitionResponse
@@ -39,6 +40,19 @@ logger = logging.getLogger("license_plate.app")
 
 
 def _create_recognizer():
+    if settings.ocr_engine == "yolo26":
+        primary = Yolo26PlateRecognizer(
+            detector_model_path=settings.yolo26_detector_model_path,
+            recognizer_model_path=settings.yolo26_recognizer_model_path,
+            minimum_confidence=settings.yolo26_min_confidence,
+        )
+        if settings.rapidocr_fallback:
+            return FallbackRecognizer(
+                primary,
+                RapidOcrRecognizer(),
+                minimum_confidence=settings.yolo26_min_confidence,
+            )
+        return primary
     if settings.ocr_engine == "paddleocr":
         primary = DetectedPaddleOcrRecognizer(
             detector=YoloV9PlateDetector(

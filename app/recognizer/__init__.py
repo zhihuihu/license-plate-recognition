@@ -6,6 +6,7 @@ from .plate_detector import YoloV9PlateDetector
 from .plate_pipeline import DetectedPaddleOcrRecognizer
 from .pool import RecognizerPool
 from .rapidocr_engine import RapidOcrRecognizer
+from .yolo26_engine import Yolo26PlateRecognizer
 
 __all__ = [
     "RapidOcrRecognizer",
@@ -18,5 +19,6 @@ __all__ = [
     "PaddleOcrRecognizer",
     "YoloV9PlateDetector",
     "DetectedPaddleOcrRecognizer",
+    "Yolo26PlateRecognizer",
     "RecognizerPool",
 ]

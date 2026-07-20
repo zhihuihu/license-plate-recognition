@@ -52,6 +52,15 @@ class Settings:
     plate_detector_padding_ratio: float = float(
         os.getenv("PLATE_DETECTOR_PADDING_RATIO", "0.08")
     )
+    yolo26_detector_model_path: str = os.getenv(
+        "YOLO26_DETECTOR_MODEL_PATH",
+        "models/plate_detector/yolo26s-plate-detect.onnx",
+    )
+    yolo26_recognizer_model_path: str = os.getenv(
+        "YOLO26_RECOGNIZER_MODEL_PATH",
+        "models/plate_detector/plate_rec_color.onnx",
+    )
+    yolo26_min_confidence: float = float(os.getenv("YOLO26_MIN_CONFIDENCE", "0.20"))
     rapidocr_fallback: bool = _bool_env("RAPIDOCR_FALLBACK", True)
     max_upload_bytes: int = _int_env("MAX_UPLOAD_BYTES", 10 * 1024 * 1024)
     # 接收并排队至少 10 个同时到达的识别请求；OCR 引擎自身仍可能

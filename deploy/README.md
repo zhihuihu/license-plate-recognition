@@ -1,6 +1,6 @@
 # Docker 部署
 
-镜像由 GitHub Actions 构建并推送到 GitHub Container Registry（GHCR）。镜像内已经包含 HyperLPR3、PaddleOCR 和 RapidOCR 模型，部署机运行时不需要访问外网，也不需要挂载模型目录。
+镜像由 GitHub Actions 构建并推送到 GitHub Container Registry（GHCR）。镜像内已经包含 HyperLPR3、PaddleOCR、RapidOCR 和 YOLO26 中国车牌专用模型，部署机运行时不需要访问外网，也不需要挂载模型目录。
 
 环境变量的完整说明见 [../docs/configuration.md](../docs/configuration.md)。本文件重点说明镜像获取、离线导入和 Docker 启动方式。
 

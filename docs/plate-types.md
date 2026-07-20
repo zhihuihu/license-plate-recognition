@@ -58,6 +58,7 @@
 - [app/recognizer/hyperlpr_engine.py](../app/recognizer/hyperlpr_engine.py)：HyperLPR3 主模型。
 - [app/recognizer/plate_detector.py](../app/recognizer/plate_detector.py)：YOLOv9/ONNX 车牌区域检测。
 - [app/recognizer/plate_pipeline.py](../app/recognizer/plate_pipeline.py)：检测车牌区域后交给 PaddleOCR 识别。
+- [app/recognizer/yolo26_engine.py](../app/recognizer/yolo26_engine.py)：YOLO26 Pose 四角检测、透视矫正、双层拼接和专用字符识别。
 - [app/recognizer/paddleocr_engine.py](../app/recognizer/paddleocr_engine.py)：PaddleOCR 文字识别。
 - [app/recognizer/fallback.py](../app/recognizer/fallback.py)：低置信度回退链。
 

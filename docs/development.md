@@ -17,6 +17,7 @@ app/
     ├── paddleocr_engine.py    # PaddleOCR 文字识别引擎
     ├── plate_detector.py      # YOLOv9/ONNX 车牌区域检测
     ├── plate_pipeline.py      # 车牌检测 + PaddleOCR 两阶段链路
+    ├── yolo26_engine.py       # YOLO26 Pose + 专用车牌识别
     ├── rapidocr_engine.py     # RapidOCR 兜底引擎
     ├── fallback.py            # 低置信度回退链
     ├── pool.py                # 多实例池
@@ -26,7 +27,7 @@ app/
 识别链路：
 
 ```text
-上传图片 → HyperLPR3 → PaddleOCR 复核 → RapidOCR 兜底 → 车牌标准化 → 统一响应
+上传图片 → 选择 HyperLPR3/PaddleOCR/YOLO26 → 回退链 → 车牌标准化 → 统一响应
 ```
 
 当前牌型支持范围和不能承诺的场景见 [plate-types.md](plate-types.md)。
@@ -52,6 +53,16 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000
 
 `paddleocr` 模式先使用 `PLATE_DETECTOR_MODEL_PATH` 指向的 YOLO ONNX 模型定位车牌，再裁剪车牌区域交给 PaddleOCR；后续可替换为现场数据训练的同输入输出兼容 ONNX 检测模型。
 
+使用中国车牌专用 YOLO26 链路：
+
+```powershell
+$env:OCR_ENGINE = "yolo26"
+$env:OFFLINE_MODE = "true"
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
+`yolo26` 模式的检测 ONNX 输出为车牌框、置信度、单层/双层类别和 4 个角点；服务会做透视矫正，并对双层车牌执行上下行拼接，再调用 `plate_rec_color.onnx` 识别。检测模型由上游 `.pt` 导出，在线服务不依赖 PyTorch 或 Ultralytics。
+
 当前 Windows Python 3.14 环境可以使用 HyperLPR3 和 RapidOCR。PaddleOCR 需要匹配的 PaddlePaddle 环境；项目已经准备了 Python 3.13 的离线资源，具体见 [../offline/README.md](../offline/README.md)。生产 Docker 镜像使用 Python 3.13 和固定 PaddleOCR 版本。
 
 ## 测试
@@ -68,6 +79,7 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000
 - 识别回退链路
 - 多实例池和排队行为
 - PaddleOCR 2.x/3.x 输出解析
+- YOLO26 检测输出和双层车牌拼接
 - 页面静态路由
 
 ## 新增识别引擎
